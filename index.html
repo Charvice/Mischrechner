@@ -139,9 +139,26 @@
     $('pct').textContent = c2.toLocaleString('de-DE', {maximumFractionDigits: 2}) + ' %';
   }
 
-  ['vol','ist','ziel'].forEach(function(id){
+  var KEY = 'mischrechner-werte';
+  var ids = ['vol','ist','ziel'];
+
+  try {
+    var saved = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (saved) ids.forEach(function(id){ if (typeof saved[id] === 'string') $(id).value = saved[id]; });
+  } catch(e){}
+
+  function save(){
+    try {
+      var data = {};
+      ids.forEach(function(id){ data[id] = $(id).value; });
+      localStorage.setItem(KEY, JSON.stringify(data));
+    } catch(e){}
+  }
+
+  ids.forEach(function(id){
     var el = $(id);
     el.addEventListener('input', calc);
+    el.addEventListener('input', save);
     el.addEventListener('focus', function(){ try { el.select(); } catch(e){} });
   });
   calc();
