@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mischrechner</title>
+<meta name="theme-color" content="#f3f1ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mischrechner">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f3f1ec; --card:#ffffff; --line:#dedad1; --field:#f8f7f3; --fieldline:#cfcac0;
+    --ink:#161614; --ink2:#3d3b36; --muted:#5c5a54; --focus:#0d5e52;
+    --res:#161614; --resink:#f3f1ec; --resmuted:#b9b5ab; --track:#2c2b28; --sep:#34322e;
+    --orig:#8a867d; --accent:#5fd3bc;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#121210; --card:#1c1b19; --line:#2e2c28; --field:#161614; --fieldline:#3a3833;
+      --ink:#f3f1ec; --ink2:#d6d2c8; --muted:#a19d93; --focus:#5fd3bc;
+      --res:#232220; --track:#34322e; --sep:#3a3833;
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'IBM Plex Sans',-apple-system,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+  .mono{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+  main{max-width:480px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;gap:20px;
+    padding:calc(env(safe-area-inset-top) + 28px) 20px calc(env(safe-area-inset-bottom) + 24px)}
+  .eyebrow{font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  h1{margin:4px 0 0;font-size:30px;line-height:1.15;font-weight:700;letter-spacing:-.01em}
+  .card{display:flex;flex-direction:column;gap:12px;padding:18px;background:var(--card);border:1px solid var(--line);border-radius:16px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  label{font-size:14px;font-weight:500;color:var(--ink2)}
+  .row{display:flex;align-items:center;gap:8px}
+  .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  input{flex:1;min-width:0;height:52px;padding:0 12px;font:600 22px 'IBM Plex Mono',ui-monospace,Menlo,monospace;
+    color:var(--ink);background:var(--field);border:1.5px solid var(--fieldline);border-radius:12px;-webkit-appearance:none;appearance:none}
+  input:focus{outline:none;border-color:var(--focus);box-shadow:0 0 0 3px rgba(95,211,188,.25)}
+  .unit{min-width:22px;font-size:18px;color:var(--muted)}
+  .result{display:flex;flex-direction:column;gap:18px;padding:20px;background:var(--res);color:var(--resink);border-radius:16px}
+  .rlabel{font-size:14px;font-weight:500;color:var(--resmuted)}
+  .big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .bignum{font-size:48px;font-weight:600;line-height:1;color:var(--accent)}
+  .sub{font-size:16px;color:var(--resmuted)}
+  .bar{display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--track)}
+  .bar > div{transition:width .25s ease}
+  .legend{display:flex;justify-content:space-between;font-size:13px;color:var(--resmuted);margin-top:8px}
+  .sep{height:1px;background:var(--sep)}
+  .k{font-size:13px;color:var(--resmuted)}
+  .v{font-size:24px;font-weight:600}
+  .msg{padding:20px;background:var(--card);border:1.5px dashed var(--fieldline);border-radius:16px;font-size:15px;line-height:1.45;color:var(--ink2)}
+  .foot{margin-top:auto;font-size:13px;line-height:1.5;color:var(--muted)}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Mischrechner</div>
+    <h1>Auf Zielkonzentration bringen</h1>
+  </header>
+
+  <section class="card">
+    <div class="field">
+      <label for="vol">Menge (Ist)</label>
+      <div class="row"><input id="vol" type="text" inputmode="decimal" autocomplete="off" value="1"><span class="unit mono">L</span></div>
+    </div>
+    <div class="grid2">
+      <div class="field">
+        <label for="ist">Ist-Anteil</label>
+        <div class="row"><input id="ist" type="text" inputmode="decimal" autocomplete="off" value="60"><span class="unit mono">%</span></div>
+      </div>
+      <div class="field">
+        <label for="ziel">Soll-Anteil</label>
+        <div class="row"><input id="ziel" type="text" inputmode="decimal" autocomplete="off" value="40"><span class="unit mono">%</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="result" id="result" aria-live="polite">
+    <div>
+      <div class="rlabel" id="mode"></div>
+      <div class="big"><div class="bignum mono" id="addL"></div><div class="sub mono" id="addMl"></div></div>
+    </div>
+    <div>
+      <div class="bar"><div id="barOrig" style="background:var(--orig)"></div><div id="barAdd" style="background:var(--accent)"></div></div>
+      <div class="legend"><span id="legOrig"></span><span>+ Zugabe</span></div>
+    </div>
+    <div class="sep"></div>
+    <div class="grid2">
+      <div><div class="k">Gesamtmenge</div><div class="v mono" id="total"></div></div>
+      <div><div class="k">Endkonzentration</div><div class="v mono" id="pct"></div></div>
+    </div>
+  </section>
+  <div class="msg" id="msg" hidden></div>
+
+  <p class="foot">Soll kleiner als Ist: Zugabe ist Verdünner mit 0 %. Soll größer als Ist: Zugabe ist Reinsubstanz mit 100 %. Komma oder Punkt als Dezimaltrenner.</p>
+</main>
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var num = function(s){ var n = parseFloat(String(s).replace(',', '.')); return isFinite(n) ? n : NaN; };
+  var fmtL = function(x){ return x.toLocaleString('de-DE', {maximumFractionDigits: 3}) + ' L'; };
+
+  function show(ok, text){
+    $('result').hidden = !ok; $('msg').hidden = ok;
+    if (!ok) $('msg').textContent = text;
+  }
+
+  function calc(){
+    var V = num($('vol').value), c1 = num($('ist').value), c2 = num($('ziel').value), add, mode;
+    if (isNaN(V) || isNaN(c1) || isNaN(c2) || V <= 0) return show(false, 'Alle drei Werte eingeben, dann steht hier das Ergebnis.');
+    if (c1 < 0 || c1 > 100 || c2 < 0 || c2 > 100) return show(false, 'Prozentwerte müssen zwischen 0 und 100 liegen.');
+    if (c2 === c1) return show(false, 'Ist und Soll sind gleich, du musst nichts hinzufügen.');
+    if (c2 < c1) {
+      if (c2 <= 0) return show(false, 'Auf 0 % kommst du durch Verdünnen nie, Soll muss über 0 liegen.');
+      add = V * (c1 - c2) / c2; mode = 'Verdünner (0 %) hinzufügen';
+    } else {
+      if (c2 >= 100) return show(false, 'Auf 100 % kommst du durch Zugabe nie, Soll muss unter 100 liegen.');
+      add = V * (c2 - c1) / (100 - c2); mode = 'Reinsubstanz (100 %) hinzufügen';
+    }
+    var total = V + add;
+    show(true);
+    $('mode').textContent = mode;
+    $('addL').textContent = fmtL(add);
+    $('addMl').textContent = Math.round(add * 1000).toLocaleString('de-DE') + ' ml';
+    $('barOrig').style.width = (V / total * 100) + '%';
+    $('barAdd').style.width = (add / total * 100) + '%';
+    $('legOrig').textContent = 'Bestand ' + fmtL(V);
+    $('total').textContent = fmtL(total);
+    $('pct').textContent = c2.toLocaleString('de-DE', {maximumFractionDigits: 2}) + ' %';
+  }
+
+  ['vol','ist','ziel'].forEach(function(id){
+    var el = $(id);
+    el.addEventListener('input', calc);
+    el.addEventListener('focus', function(){ try { el.select(); } catch(e){} });
+  });
+  calc();
+
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    try { navigator.serviceWorker.register('sw.js').catch(function(){}); } catch(e){}
+  }
+})();
+</script>
+</body>
+</html>
